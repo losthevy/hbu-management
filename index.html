@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HBU Ecosystem - Transformasi Aset Idle</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        midnight: '#003366',
+                        golden: '#FFCC00',
+                        neutralBg: '#F4F4F4',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        'custom': '6px',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F4F4F4; }
+        .sidebar-link.active { background-color: rgba(255, 204, 0, 0.1); border-right: 4px solid #FFCC00; color: #FFCC00; }
+        .heatmap-grid div { transition: all 0.3s ease; }
+        .heatmap-grid div:hover { transform: scale(1.1); z-index: 10; cursor: pointer; }
+        .bar-chart-container { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-slate-800" x-data="{ activeTab: 'dashboard', showAi: false, hubSubTab: 'kios', isSidebarOpen: false, selectedChat: 'manager' }">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="isSidebarOpen" 
+         x-transition.opacity
+         @click="isSidebarOpen = false"
+         class="fixed inset-0 bg-black/50 z-[60] md:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" 
+           class="fixed inset-y-0 left-0 w-64 bg-midnight text-white flex flex-col shadow-xl z-[70] transition-transform duration-300 ease-in-out">
+        
+        <div class="p-6 border-b border-white/10 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-golden rounded-custom flex items-center justify-center text-midnight font-bold text-xl">H</div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">HBU ECO</h1>
+                    <p class="text-xs text-slate-300">Management</p>
+                </div>
+            </div>
+            <button @click="isSidebarOpen = false" class="md:hidden text-white/50">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        
+        <nav class="flex-1 mt-6 px-4 space-y-2 overflow-y-auto">
+            <button @click="activeTab = 'dashboard'; isSidebarOpen = false" :class="activeTab === 'dashboard' ? 'active' : ''" class="sidebar-link w-full flex items-center gap-3 p-3 rounded-custom hover:bg-white/5 transition-all text-left">
+                <i class="fa-solid fa-chart-line w-5"></i> <span>Dashboard</span>
+            </button>
+            <button @click="activeTab = 'academy'; isSidebarOpen = false" :class="activeTab === 'academy' ? 'active' : ''" class="sidebar-link w-full flex items-center gap-3 p-3 rounded-custom hover:bg-white/5 transition-all text-left">
+                <i class="fa-solid fa-graduation-cap w-5"></i> <span>The Academy</span>
+            </button>
+            <button @click="activeTab = 'hub'; isSidebarOpen = false" :class="activeTab === 'hub' ? 'active' : ''" class="sidebar-link w-full flex items-center gap-3 p-3 rounded-custom hover:bg-white/5 transition-all text-left">
+                <i class="fa-solid fa-store w-5"></i> <span>The Hub (Bisnis)</span>
+            </button>
+            <button @click="activeTab = 'community'; isSidebarOpen = false" :class="activeTab === 'community' ? 'active' : ''" class="sidebar-link w-full flex items-center gap-3 p-3 rounded-custom hover:bg-white/5 transition-all text-left">
+                <i class="fa-solid fa-comments w-5"></i> <span>The Community</span>
+            </button>
+            <button @click="activeTab = 'brain'; isSidebarOpen = false" :class="activeTab === 'brain' ? 'active' : ''" class="sidebar-link w-full flex items-center gap-3 p-3 rounded-custom hover:bg-white/5 transition-all text-left">
+                <i class="fa-solid fa-brain w-5"></i> <span>The Brain (AI)</span>
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-white/10">
+            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-custom">
+                <div class="w-8 h-8 rounded-full bg-slate-500 flex items-center justify-center text-xs flex-shrink-0">UM</div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-semibold truncate">UMKM Berdikari</p>
+                    <p class="text-[10px] text-slate-400">Level 2: Pejuang Pajak</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="md:ml-64 min-h-screen flex flex-col">
+        <!-- Top Navbar -->
+        <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-40">
+            <div class="flex items-center gap-3">
+                <button @click="isSidebarOpen = true" class="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-custom">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <h2 class="font-semibold text-midnight text-base md:text-lg capitalize truncate" x-text="activeTab.replace('-', ' ')"></h2>
+            </div>
+            <div class="flex items-center gap-2 md:gap-4">
+                <button @click="showAi = !showAi" class="bg-midnight text-white px-3 md:px-4 py-1.5 rounded-custom text-xs md:text-sm font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-robot"></i> <span class="hidden xs:inline">Tanya AI</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="p-4 md:p-6 flex-1 flex flex-col">
+            
+            <!-- 1. Dashboard View -->
+            <template x-if="activeTab === 'dashboard'">
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
+                        <div class="bg-white p-4 rounded-custom border border-slate-200 shadow-sm">
+                            <p class="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase">Aset Tersewa</p>
+                            <h3 class="text-lg md:text-xl font-bold text-midnight mt-1">12 <span class="text-xs font-normal text-slate-400">Unit</span></h3>
+                        </div>
+                        <div class="bg-white p-4 rounded-custom border border-slate-200 shadow-sm">
+                            <p class="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase">Pesanan Online</p>
+                            <h3 class="text-lg md:text-xl font-bold text-midnight mt-1">342</h3>
+                        </div>
+                        <div class="bg-white p-4 rounded-custom border border-slate-200 shadow-sm">
+                            <p class="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase">Total Omset</p>
+                            <h3 class="text-lg md:text-xl font-bold text-midnight mt-1">Rp 5Jt</h3>
+                        </div>
+                        <div class="bg-white p-4 rounded-custom border border-slate-200 shadow-sm border-l-4 border-l-golden">
+                            <p class="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase">Rata-rata Sewa</p>
+                            <h3 class="text-lg md:text-xl font-bold text-midnight mt-1">Rp 1.5Jt</h3>
+                        </div>
+                        <div class="bg-white p-4 rounded-custom border border-slate-200 shadow-sm col-span-2 lg:col-span-1">
+                            <p class="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase">Kepatuhan Pajak</p>
+                            <h3 class="text-lg md:text-xl font-bold text-midnight mt-1">94%</h3>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white p-4 md:p-6 rounded-custom border border-slate-200 shadow-sm">
+                            <h4 class="font-bold text-midnight text-sm md:text-base mb-6">Statistik Pendapatan</h4>
+                            <div class="bar-chart-container flex items-end justify-between px-1 md:px-2 pt-4 border-b border-slate-100">
+                                <template x-for="(h, i) in [60, 45, 80, 95, 30, 20]">
+                                    <div class="flex-1 flex flex-col items-center gap-2 min-w-[30px]">
+                                        <div class="w-full max-w-[20px] bg-slate-100 h-24 rounded-t-sm relative">
+                                            <div class="absolute bottom-0 w-full rounded-t-sm" :style="'height: ' + h + '%'" :class="i === 3 ? 'bg-golden' : 'bg-midnight'"></div>
+                                        </div>
+                                        <span class="text-[9px] text-slate-400" x-text="['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'][i]"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 md:p-6 rounded-custom border border-slate-200 shadow-sm">
+                            <h4 class="font-bold text-midnight text-sm md:text-base mb-4">Crowd Heatmap</h4>
+                            <div class="aspect-square bg-slate-100 rounded-custom relative overflow-hidden">
+                                <div class="grid grid-cols-6 gap-1 w-full h-full p-2 heatmap-grid">
+                                    <template x-for="i in 36"><div :class="Math.random() > 0.7 ? 'bg-orange-500' : (Math.random() > 0.4 ? 'bg-yellow-400' : 'bg-green-300')" class="rounded-sm opacity-60"></div></template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- 2. The Academy View -->
+            <template x-if="activeTab === 'academy'">
+                <div class="space-y-6">
+                    <div class="bg-midnight p-6 md:p-8 rounded-custom text-white relative overflow-hidden">
+                        <div class="relative z-10 max-w-xl">
+                            <h3 class="text-xl md:text-2xl font-bold mb-2 text-golden text-left">The Academy</h3>
+                            <p class="text-xs md:text-sm text-slate-300 mb-6 text-left">Sistem pembelajaran adaptive untuk UMKM.</p>
+                            <div class="w-full mb-4">
+                                <div class="flex justify-between text-[10px] mb-1"><span>Progres Level: Expert</span><span>75%</span></div>
+                                <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden"><div class="bg-golden h-full" style="width: 75%"></div></div>
+                            </div>
+                            <button class="bg-golden text-midnight font-bold px-6 py-2 rounded-custom text-sm">Lanjutkan Belajar</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-4 rounded-custom border border-slate-200 flex flex-col items-center text-center">
+                            <i class="fa-solid fa-calculator text-midnight text-3xl mb-4"></i>
+                            <h5 class="font-bold text-sm mb-2">Manajemen Arus Kas</h5>
+                            <button class="w-full mt-auto py-2 border border-midnight text-midnight rounded text-xs font-bold">Mulai Modul</button>
+                        </div>
+                        <div class="bg-white p-4 rounded-custom border border-slate-200 flex flex-col items-center text-center">
+                            <i class="fa-solid fa-landmark text-midnight text-3xl mb-4"></i>
+                            <h5 class="font-bold text-sm mb-2">Pajak UMKM 2024</h5>
+                            <button class="w-full mt-auto py-2 border border-midnight text-midnight rounded text-xs font-bold">Mulai Modul</button>
+                        </div>
+                        <div class="bg-golden/10 border-2 border-dashed border-golden p-4 rounded-custom text-center">
+                            <h5 class="font-bold text-midnight text-sm mb-2">XP & Gamifikasi</h5>
+                            <div class="flex justify-center gap-4 mt-2">
+                                <div class="bg-white p-2 rounded shadow-sm">
+                                    <i class="fa-solid fa-bolt text-yellow-500"></i> <span class="text-xs font-bold">1,250 XP</span>
+                                </div>
+                                <div class="bg-white p-2 rounded shadow-sm">
+                                    <i class="fa-solid fa-medal text-orange-400"></i> <span class="text-xs font-bold">4 Badges</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- 3. The Hub View -->
+            <template x-if="activeTab === 'hub'">
+                <div class="space-y-6">
+                    <div class="flex border-b border-slate-200 gap-6 overflow-x-auto hide-scrollbar sticky top-16 bg-neutralBg z-30 pt-2">
+                        <button @click="hubSubTab = 'kios'" :class="hubSubTab === 'kios' ? 'border-b-2 border-midnight text-midnight font-bold' : 'text-slate-400'" class="pb-3 px-2 text-xs md:text-sm transition-all whitespace-nowrap">Manajemen Kios</button>
+                        <button @click="hubSubTab = 'orders'" :class="hubSubTab === 'orders' ? 'border-b-2 border-midnight text-midnight font-bold' : 'text-slate-400'" class="pb-3 px-2 text-xs md:text-sm transition-all whitespace-nowrap">Pesanan Online</button>
+                        <button @click="hubSubTab = 'catalog'" :class="hubSubTab === 'catalog' ? 'border-b-2 border-midnight text-midnight font-bold' : 'text-slate-400'" class="pb-3 px-2 text-xs md:text-sm transition-all whitespace-nowrap">Katalog Produk</button>
+                        <button @click="hubSubTab = 'maintenance'" :class="hubSubTab === 'maintenance' ? 'border-b-2 border-midnight text-midnight font-bold' : 'text-slate-400'" class="pb-3 px-2 text-xs md:text-sm transition-all whitespace-nowrap">Biaya & Utility</button>
+                    </div>
+
+                    <!-- Kios Tab -->
+                    <div x-show="hubSubTab === 'kios'" class="bg-white rounded-custom border border-slate-200 overflow-x-auto">
+                        <table class="w-full text-left text-xs md:text-sm min-w-[500px]">
+                            <thead class="bg-slate-50 border-b border-slate-200 font-bold">
+                                <tr><th class="p-4">Kode</th><th class="p-4">Lokasi</th><th class="p-4">Status</th><th class="p-4">Harga Sewa</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr><td class="p-4 font-mono font-bold">A-001</td><td class="p-4">Pelataran GKN II</td><td class="p-4"><span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-bold">AKTIF</span></td><td class="p-4 font-bold">Rp 1.5Jt</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Orders Tab -->
+                    <div x-show="hubSubTab === 'orders'" class="space-y-4">
+                        <div class="bg-white p-4 rounded-custom border border-slate-200 shadow-sm flex justify-between items-center">
+                            <div><p class="text-xs text-slate-400">Pesanan Baru</p><h4 class="text-xl font-bold text-midnight">3 Order</h4></div>
+                            <button class="bg-midnight text-white px-4 py-2 rounded text-xs font-bold">PROSES SEMUA</button>
+                        </div>
+                        <div class="bg-white rounded-custom border border-slate-200 divide-y divide-slate-100">
+                            <div class="p-4 flex justify-between items-center">
+                                <div><p class="font-mono font-bold text-[10px] text-slate-400">#ORD-9921</p><p class="font-bold text-xs">Kopi Kenangan x1</p></div>
+                                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">DITERIMA</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Catalog Tab -->
+                    <div x-show="hubSubTab === 'catalog'" class="space-y-4">
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="text" placeholder="Cari produk..." class="flex-1 bg-white border border-slate-200 rounded p-2 text-xs outline-none">
+                            <button class="bg-midnight text-white px-4 py-2 rounded text-xs font-bold">+ PRODUK</button>
+                        </div>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="bg-white rounded border border-slate-200 overflow-hidden">
+                                <div class="aspect-square bg-slate-100 flex items-center justify-center"><i class="fa-solid fa-mug-hot text-2xl text-slate-300"></i></div>
+                                <div class="p-3"><p class="font-bold text-xs truncate">Kopi Susu Aren</p><p class="text-sm font-bold text-midnight">Rp 18.000</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Maintenance Tab -->
+                    <div x-show="hubSubTab === 'maintenance'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-custom border border-slate-200 flex flex-col">
+                            <div class="flex justify-between items-start mb-4">
+                                <div><p class="text-[10px] font-bold uppercase text-slate-400">Listrik (PLN)</p><h4 class="text-xl font-bold text-midnight">Rp 450.000</h4></div>
+                                <i class="fa-solid fa-bolt text-yellow-500 opacity-20 text-3xl"></i>
+                            </div>
+                            <button class="w-full py-2 bg-midnight text-white rounded text-[10px] font-bold uppercase mt-auto">Bayar via QRIS</button>
+                        </div>
+                        <div class="bg-white p-4 rounded-custom border border-slate-200 flex flex-col">
+                            <div class="flex justify-between items-start mb-4">
+                                <div><p class="text-[10px] font-bold uppercase text-slate-400">Air (PAM)</p><h4 class="text-xl font-bold text-midnight">Rp 125.000</h4></div>
+                                <i class="fa-solid fa-droplet text-blue-500 opacity-20 text-3xl"></i>
+                            </div>
+                            <span class="text-center py-2 bg-green-50 text-green-600 text-[10px] font-bold rounded uppercase mt-auto">LUNAS</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- 4. The Community View -->
+            <template x-if="activeTab === 'community'">
+                <div class="flex-1 flex overflow-hidden border border-slate-200 rounded-custom bg-white shadow-sm h-[calc(100vh-140px)]">
+                    <div class="w-full md:w-72 border-r border-slate-100 flex flex-col" :class="selectedChat ? 'hidden md:flex' : 'flex'">
+                        <div class="p-4 border-b border-slate-100 font-bold text-sm text-midnight">Pesan</div>
+                        <div class="flex-1 overflow-y-auto">
+                            <div @click="selectedChat = 'manager'" :class="selectedChat === 'manager' ? 'bg-slate-50' : ''" class="p-4 border-b border-slate-50 cursor-pointer flex gap-3">
+                                <div class="w-10 h-10 rounded-full bg-midnight text-white flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-user-shield"></i></div>
+                                <div class="min-w-0 flex-1"><p class="text-xs font-bold truncate">Pengelola Area</p><p class="text-[10px] text-slate-500 truncate">Laporan air diterima...</p></div>
+                            </div>
+                            <div @click="selectedChat = 'group'" :class="selectedChat === 'group' ? 'bg-slate-50' : ''" class="p-4 border-b border-slate-50 cursor-pointer flex gap-3">
+                                <div class="w-10 h-10 rounded-full bg-golden text-midnight flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-users"></i></div>
+                                <div class="min-w-0 flex-1"><p class="text-xs font-bold truncate">Forum Tenant</p><p class="text-[10px] text-slate-500 truncate">Ada promo...</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-1 flex flex-col bg-slate-50" :class="!selectedChat ? 'hidden md:flex' : 'flex'">
+                        <template x-if="selectedChat">
+                            <div class="flex flex-col h-full">
+                                <div class="bg-white p-4 border-b border-slate-100 flex items-center gap-3">
+                                    <button @click="selectedChat = null" class="md:hidden text-slate-400"><i class="fa-solid fa-arrow-left"></i></button>
+                                    <h4 class="text-xs font-bold" x-text="selectedChat === 'manager' ? 'Pengelola Area' : 'Forum Tenant'"></h4>
+                                </div>
+                                <div class="flex-1 p-4 space-y-4 overflow-y-auto">
+                                    <div class="bg-white p-3 rounded-r-lg rounded-bl-lg border border-slate-100 shadow-sm max-w-[80%] text-xs">Halo, laporan terkait kendala air sudah kami terima.</div>
+                                    <div class="bg-midnight text-white p-3 rounded-l-lg rounded-br-lg shadow-sm max-w-[80%] self-end text-xs">Terima kasih Pak.</div>
+                                </div>
+                                <div class="bg-white p-3 border-t border-slate-100 flex gap-2">
+                                    <input type="text" placeholder="Tulis pesan..." class="flex-1 bg-slate-50 rounded px-4 py-2 text-xs outline-none">
+                                    <button class="bg-midnight text-white w-9 h-9 rounded flex items-center justify-center"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <!-- 5. The Brain View -->
+            <template x-if="activeTab === 'brain'">
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-custom border border-slate-200 shadow-sm">
+                            <h4 class="font-bold text-midnight text-sm mb-4">Prediksi Penjualan (AI)</h4>
+                            <div class="h-40 flex items-end gap-2 border-b border-l border-slate-100 p-2">
+                                <template x-for="h in [20, 35, 50, 90, 40]"><div class="flex-1 bg-midnight rounded-t-sm" :style="'height: ' + h + '%'"></div></template>
+                            </div>
+                            <p class="text-[10px] text-slate-500 italic mt-4">Prediksi kenaikan +25% saat gajian PNS minggu depan.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-custom border border-slate-200 shadow-sm">
+                            <h4 class="font-bold text-midnight text-sm mb-4">Analisis Sewa</h4>
+                            <div class="space-y-4">
+                                <div class="flex justify-between text-xs"><p>HBU Eco</p><p class="font-bold">Rp 1.5Jt</p></div>
+                                <div class="flex justify-between text-xs text-slate-300"><p>Pasar Sekitar</p><p class="font-bold">Rp 2.2Jt</p></div>
+                                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div class="bg-midnight h-full" style="width: 68%"></div></div>
+                                <p class="text-[10px] text-green-600 font-bold bg-green-50 py-1 text-center rounded">Hemat 32% vs Pasar</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-custom border border-slate-200 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4"><i class="fa-solid fa-file-invoice-dollar text-2xl text-midnight"></i><h4 class="font-bold text-midnight text-sm">One-Click Tax Filing</h4></div>
+                        <div class="p-4 bg-slate-50 rounded border border-slate-100 mb-4 space-y-2">
+                            <div class="flex justify-between text-xs"><span>Omset Berjalan</span><span class="font-bold">Rp 5.000.000</span></div>
+                            <div class="flex justify-between text-xs"><span>Pajak (0.5%)</span><span class="font-bold">Rp 25.000</span></div>
+                        </div>
+                        <button class="w-full py-3 bg-golden text-midnight font-bold rounded flex items-center justify-center gap-2">EKSPOR KE DJP ONLINE</button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Footer -->
+        <footer class="p-6 text-center text-[10px] text-slate-400 border-t border-slate-200">
+            &copy; 2024 HBU Ecosystem - Direktorat Jenderal Kekayaan Negara. Versi 1.4.0 (Full Features Restored).
+        </footer>
+    </main>
+
+    <!-- AI Assistant Floating -->
+    <div x-show="showAi" x-transition class="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-80 h-full sm:h-96 bg-white sm:rounded-custom shadow-2xl border z-[100] flex flex-col">
+        <div class="bg-midnight p-4 text-white flex justify-between items-center">
+            <span class="font-bold text-sm">HBU Smart Assistant</span>
+            <button @click="showAi = false" class="text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="flex-1 p-4 overflow-y-auto space-y-4 text-xs bg-slate-50">
+            <div class="bg-slate-200 p-2 rounded-r-lg rounded-bl-lg max-w-[85%] text-left">Halo! Seluruh fitur telah dikembalikan. Anda bisa mengecek detail di tiap menu. Ada lagi yang bisa saya bantu?</div>
+        </div>
+        <div class="p-3 border-t bg-white flex gap-2">
+            <input type="text" placeholder="Tanya AI..." class="flex-1 bg-slate-100 rounded px-3 py-2 text-xs outline-none">
+            <button class="bg-midnight text-white w-9 h-9 rounded flex items-center justify-center"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+        </div>
+    </div>
+
+</body>
+</html>
